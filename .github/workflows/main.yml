@@ -1,0 +1,45 @@
+name: Peter Test Web CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      # - master
+      # - main
+      - gha/retry-step-test
+
+
+concurrency:
+  # group: ${{ github.ref == 'refs/heads/master' && format('web-ci-master-{0}', github.sha) || format('web-ci-{0}', github.ref) }}
+  group: ${{ (github.ref == 'refs/heads/master' && format('web-ci-master-{0}', github.sha)) || format('web-ci-{0}', github.ref) }}  
+  cancel-in-progress: true
+
+# concurrency:
+#   group: web-ci-${{ github.ref }}
+#   cancel-in-progress: true
+
+jobs:
+  # This workflow contains a single job called "build-test"
+  test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simple command
+        run: |
+          sleep 5
+          echo "${{ github.ref }}"
+          echo "${{ github.ref_name }}"
+          echo "${{ github.sha }}"
+          echo '${{ toJSON(github) }}'
+          echo "${{ github.event_name == 'push' }}"
+          exit 1
+
+      - name: Testing retry action
+        uses: Wandalen/wretry.action@master
+        with:
+          action: action/node-setup@2.3.0
+          with: |
+            node-version: 14.x
+            architecture: x64
+          attempt_limit: 3
+          attempt_delay: 10
